@@ -36,31 +36,61 @@ if (new URLSearchParams(window.location.search).get('mode') !== 'timer') {
     const btnHard = document.getElementById("btn-hard");
     const btnStart = document.getElementById("start-session-btn");
 
-    // CREAZIONE INPUT INVISIBILE PER FORZARE LA TASTIERA SU MOBILE
+    // CREAZIONE INPUT FISSO E ULTRA-INVISIBILE PER PREVENIRE SALTI DI SCHERMO
     const mobileInput = document.createElement("input");
     mobileInput.type = "text";
     mobileInput.setAttribute("autocomplete", "off");
     mobileInput.setAttribute("autocapitalize", "none");
     mobileInput.setAttribute("spellcheck", "false");
-    mobileInput.style.position = "absolute";
+    mobileInput.style.position = "fixed";
+    mobileInput.style.top = "0";
+    mobileInput.style.left = "0";
+    mobileInput.style.width = "100vw";
+    mobileInput.style.height = "0";
     mobileInput.style.opacity = "0";
     mobileInput.style.pointerEvents = "none";
     mobileInput.style.zIndex = "-1000";
     document.body.appendChild(mobileInput);
 
-    // Toccare il tabellone apre la tastiera
-    board.addEventListener("click", () => {
+    // Inizializzato con uno spazio per intercettare stabilmente il Backspace su Android
+    mobileInput.value = " ";
+
+    function focusMobileInput() {
         if (!restartBtn.classList.contains("hidden")) return;
-        mobileInput.focus();
+        mobileInput.focus({ preventScroll: true });
+        // Centra stabilmente la griglia attiva nella porzione di schermo rimasta visibile
+        setTimeout(() => {
+            board.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 100);
+    }
+
+    // Toccando qualunque punto della schermata di gioco riprende il focus e centra la griglia
+    document.addEventListener("click", (e) => {
+        if (e.target.id === "leaderboard-username" || e.target.closest("button") || e.target.closest(".diff-btn") || e.target.closest("#mode-selector")) return;
+        focusMobileInput();
     });
 
-    // Intercetta la digitazione da mobile (gestisce il bug del tasto 229 di Android)
+    // Gestione input mobile avanzata (Risolve il bug del tasto 229 Android)
     mobileInput.addEventListener("input", (e) => {
-        if (e.data) {
-            const key = e.data.toUpperCase();
+        const val = mobileInput.value;
+        if (val.length === 0) {
+            // Se la lunghezza è 0 significa che l'utente ha cancellato lo spazio iniziale -> Tasto Cancella
+            if (restartBtn.classList.contains("hidden")) removeLetter();
+            mobileInput.value = " ";
+        } else if (val.length > 1) {
+            // Se la lunghezza è maggiore di 1, è stata inserita una lettera dopo lo spazio
+            const key = val.charAt(val.length - 1).toUpperCase();
             if (key >= "A" && key <= "Z") addLetter(key);
+            mobileInput.value = " ";
         }
-        mobileInput.value = ""; 
+    });
+
+    mobileInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            if (!restartBtn.classList.contains("hidden")) restartBtn.click();
+            else checkRow();
+            e.preventDefault();
+        }
     });
 
     let highScore = localStorage.getItem("wordman_high_score") || 0;
@@ -142,31 +172,18 @@ if (new URLSearchParams(window.location.search).get('mode') !== 'timer') {
         ctx.moveTo(40, 20);  ctx.lineTo(120, 20);
         ctx.moveTo(120, 20); ctx.lineTo(120, 50);
         ctx.stroke();
+
+        focusMobileInput();
     }
 
     window.addEventListener("keydown", (e) => {
         if (document.activeElement === document.getElementById("leaderboard-username")) return;
-
-        // Routing speciale per i comandi inviati tramite l'input mobile
-        if (e.target === mobileInput) {
-            const key = e.key.toUpperCase();
-            if (key === "ENTER") {
-                if (!restartBtn.classList.contains("hidden")) restartBtn.click();
-                else checkRow();
-                e.preventDefault();
-            } else if (key === "BACKSPACE") {
-                if (restartBtn.classList.contains("hidden")) removeLetter();
-                e.preventDefault();
-            }
-            return;
-        }
+        if (e.target === mobileInput) return; // Gestito dai listener dedicati sopra
 
         const key = e.key.toUpperCase();
 
         if (!restartBtn.classList.contains("hidden")) {
-            if (key === "ENTER") {
-                restartBtn.click();
-            }
+            if (key === "ENTER") restartBtn.click();
             return;
         }
 
@@ -186,7 +203,6 @@ if (new URLSearchParams(window.location.search).get('mode') !== 'timer') {
         }
     }
 
-    // Esportata per permettere la rimozione corretta
     function removeLetter() {
         if (currentTile > 0) {
             currentTile--;
