@@ -47,3 +47,58 @@ const ONLINE_LEADERBOARD = {
         }
     }
 };
+
+// Aggiungi questa funzione dentro ONLINE_LEADERBOARD, subito sotto a submitScore
+    getLeaderboardData: async function() {
+        const myToken = this._getOrCreateUserToken();
+        // Ordiniamo la classifica dal punteggio più alto a quello più basso
+        const url = `${this.SUPABASE_URL}/rest/v1/leaderboard?order=score.desc`;
+        
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'apikey': this.SUPABASE_KEY,
+                    'Authorization': `Bearer ${this.SUPABASE_KEY}`
+                }
+            });
+
+            if (!response.ok) return null;
+            const allRecords = await response.json();
+
+            let top10 = [];
+            let currentUserRow = null;
+
+            // Mappiamo tutti i record aggiungendo la posizione effettiva (Rank)
+            allRecords.forEach((record, index) => {
+                const playerRank = index + 1;
+                const isMe = (record.user_token === myToken);
+
+                const playerData = {
+                    rank: playerRank,
+                    username: record.username,
+                    score: record.score,
+                    isCurrentUser: isMe
+                };
+
+                // Se fa parte dei primi 10 lo inseriamo nella lista dei migliori
+                if (playerRank <= 10) {
+                    top10.push(playerData);
+                }
+
+                // Se questo record appartiene all'utente corrente, lo salviamo a parte
+                if (isMe) {
+                    currentUserRow = playerData;
+                }
+            });
+
+            return {
+                top10: top10,
+                currentUserRow: currentUserRow
+            };
+
+        } catch (error) {
+            console.error("Errore nel caricamento della classifica:", error);
+            return null;
+        }
+    },

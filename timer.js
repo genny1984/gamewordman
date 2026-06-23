@@ -464,12 +464,14 @@ function focusMobileInput() {
             btnSubmitGlobal.disabled = true;
 
             const res = await ONLINE_LEADERBOARD.submitScore(username, totalScore);
-            if (res) {
-                showMessage(`🌍 Record inviato con successo!`);
-                fetchGlobalRank();
-            } else {
-                showMessage(`❌ Errore durante il salvataggio.`);
-            }
+			// Esempio di modifica nel blocco finale di script.js / timer.js
+			if (res) {
+				showMessage(`🌍 Record inviato con successo!`);
+				// Aspetta 1 secondo per far leggere il messaggio e poi sposta l'utente sulla classifica
+				setTimeout(() => {
+					window.location.href = "leaderboard.html";
+				}, 1200);
+			}
 
             globalSaveContainer.classList.add("hidden");
             btnSubmitGlobal.innerText = "Invia Record";
