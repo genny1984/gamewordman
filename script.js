@@ -37,6 +37,12 @@ const btnModeTimer = document.getElementById("btn-mode-timer");
 const canvasPlayer = document.getElementById("hangman");
 const ctxPlayer = canvasPlayer.getContext("2d");
 
+// Elementi classifica mondiale
+const globalRankTag = document.getElementById("global-rank-tag");
+const globalSaveContainer = document.getElementById("global-save-container");
+const leaderboardUsername = document.getElementById("leaderboard-username");
+const btnSubmitGlobal = document.getElementById("btn-submit-global");
+
 const EASY_WORDS = ["TRENO", "GATTO", "PIZZA", "CORSA", "FUOCO", "MONDO", "TASTO", "LIBRO", "VERDE", "FIORE", "ACQUA", "AMICO", "ANIMA", "AEREO", "BARCA", "BOCCA", "BRAVO", "CAFFE", "CANTO", "CAPRA", "CARTA", "CERVO", "CIELO", "CLIMA", "COLPO", "COSTA", "CUORE", "DENTE", "DISCO", "DOLCE", "BANCO", "BARBA", "BASTA", "BENE", "BONUS", "BORSA", "BOZZA", "BUSTO", "CALDO", "CAMPO", "CARNE", "CASSA", "CENA", "CERTO", "CHILO", "CINTA", "CODA", "COLLO", "CONTO", "CORPO", "COSA", "CREMA", "CRISI", "CUOCO", "DANNO", "DONNA", "DOPO", "DRAMMA", "ERBA", "ESAME", "FALCO", "FATTO", "FILM", "FILO", "FIUME", "FOLLE", "FORMA", "FORNO", "FORTE", "FORZA", "FUMO", "FUNE", "GAMBA", "GIOCO", "GIOIA", "GIRO", "GONNA", "GRANO", "GRAVE", "GRIDO", "GUIDA", "GUSTO", "IDEA", "ISOLA", "LANCI", "LATTE", "LATO", "LEGNO", "LENTE", "LEONE", "LEGGE", "LINEA", "LUCE", "LUNA", "LUNGO", "LUSSO", "MADRE", "MAGO", "MANO", "MARE", "MASSA", "MATTO", "MENTE", "MESE", "METRO", "MIELE", "MIRA", "MITO", "MODA", "MODO", "NOME", "NATTU", "NODO", "NAVE", "NOTTE", "ONDA", "ORSO", "PACCO", "PADRE", "PAESE", "PANE", "PARCO", "PARTE", "PASSO", "PASTA", "PAURA", "PELLE", "PENA", "PENNA", "PESCE", "PESO", "PETTO", "PIANO", "PIEDE", "PINO", "PINZA", "PIUMA", "POETA", "POLLO", "POLPO", "POMPA", "PONTE", "PORTA", "POSTO", "PRATO", "PRIMA", "PRIMO", "PROVA", "PUNTA", "PUNTO", "QUALE", "QUOTA", "RADIO", "RAMO", "RAZZA", "REGNO", "RESTA", "RICCO", "RISO", "RITMO", "ROMA", "ROSA", "RUOTA", "RUOLO", "SACCO", "SALE", "SALTO", "SOLE", "SONNO", "SOPRA", "SORDO", "SOSTA", "SPADA", "SPIA", "SPINA", "SPOSA", "SUCCO", "SUOLO", "SUONO", "SUPER", "TANA", "TAPPO", "TASCA", "TEMA", "TESTA", "TESTO", "TIGRE", "TIPO", "TOCCO", "TOPO", "TUTTO", "UMANO", "UMORE", "UNICO", "UOMO", "UOVO", "URLO", "USATO", "VALLE", "VASCA", "VELO", "VINO", "VIOLA", "VISTA", "VITA", "VOCE", "VOLO", "VOLPE", "VOLTO", "VUOTO", "ZAINO", "ZAMPA", "ZUPPA"];
 const HARD_WORDS = ["ALBERO", "BRUCO", "PADRE", "CHIAVE", "STRADA", "PIANTO", "PORTAI", "STADIO", "TEATRO", "TAVOLO", "QUADRO", "PRANZO", "SPUGNA", "SANGUE", "SOGNO", "STORIA", "VESTITO", "VIAGGIO", "SGUARDO", "SCUOLA", "ACCIAIO", "ACERBO", "AZIONE", "BAMBINO", "BANANA", "BARILE", "BARONE", "BLOCCO", "BREZZA", "BRIVIDO", "BRONZO", "CABINA", "CADUTA", "CALICE", "CAMINO", "CAMICE", "CAMMELLO", "CANALE", "CANDELA", "CANILE", "CATENA", "CAVALLO", "CELERE", "CENERE", "CERCHIO", "CERVO", "CESTO", "CHITARRA", "CIAMBILLA", "CICALA", "CILIEGIA", "CIMITERO", "CINEMA", "CINTURA", "CIOCCOLATO", "CIPRESSO", "CITTADINO", "CLASSE", "COLORE", "COMETA", "COMODO", "COMUNE", "CONIGLIO", "CONTADINO", "CORONA", "CORTILE", "CUGINO", "CULTURA", "CUSCINO", "DECORO", "DELFINO", "DESTRO", "DIARIO", "DISEGNO", "DIVANO", "DOCCIA", "DOPPIO", "DOVERE", "EDITORE", "EFFETTO", "ELENCO", "ENERGIA", "ERRORE", "ESTATE", "FALCONE", "FANGO", "FARFALLA", "FASCIA", "FAVORE", "FEBBRE", "FERRO", "FIAMMA", "FIANCO", "FIDUCIA", "FIGLIO", "FINALE", "FINESTRA", "FIOCCHIO", "FLAUTO", "FOCACCIA", "FOGLIA", "FORESTA", "FORTEZZA", "FRECCIA", "FREDDO", "FRESCO", "FRONTE", "FRUTTO", "FUCILE", "FUTURO", "GABBIA", "GAMBERO", "GARAGE", "GELATO", "GENTILE", "GESTATO", "GIACCA", "GIARDINO", "GIORNO", "GIOVANE", "GIRAFFA", "GIUDICE", "GLORIA", "GOMITO", "GONNA", "GRADINO", "GRAFFIO", "GRANDE", "GRASSO", "GRATIS", "GRAZIA", "GRIGIO", "GRUPPO", "GUANTO", "GUERRA", "GUSCIO", "IMPERO", "INVERNO", "INVIDIA", "IRONIA", "ISTANTE", "ITALIA", "LABBRO", "LADRO", "LAMPADA", "LANCIA", "LAVORO", "LEGUME", "LETTERA", "LEZIONE", "LIBERO", "LINGUA", "LIQUIDO", "LIVELLO", "LOCALE", "LODARE", "LONTANO", "LUCIDO", "LUGIO", "LUSSO", "MAESTRO", "MAGGIO", "MAGLIA", "MALATO", "MANICA", "MANTO", "MAPPA", "MARCIA", "MARINA", "MATITA", "MEDICO", "METODO", "MINUTO", "MISURA", "MODELLO", "MODERNO", "MONETA", "MOTORE", "MOSTRA", "MULINO", "MUSICA", "NATURA", "NEBBIA", "NEGOZIO", "NIPOTE", "NONNO", "NOTIZIA", "NUVOLA", "ONESTO", "OPERA", "ORARIO", "ORECCHIO", "ORGOGLIO", "ORIGINE", "OROLOGIO", "OSCURO", "OSPEDALE", "OTTIMO", "PAGINA", "PALAZZO", "PALUDE", "PANINO", "PAPERA", "PAROLA", "PASSATO", "PATATA", "PAURA", "PECORA", "PELO", "PENSIERO", "PERICOLO", "PERLA", "PESCATORE", "PIANETA", "PIANTO", "PIAZZA", "PICCOLO", "PIETRA", "PILOTA", "PITTORE", "PIOGGIA", "POESIA", "POLIZIA", "POLMONE", "POPOLO", "POSTA", "POTERE", "POVERO", "PRANZO", "PRATO", "PREZZO", "PRIMAVERA", "PULITO", "QUADRO", "RABBIA", "RAGAZZO", "RAGNO", "RAPIDO", "REGOLA", "REGINA", "RICCHEZZA", "RICORDO", "RIFUGIO", "RIPOSO", "RITORNO", "RIVALE", "ROCCIA", "SABATO", "SABBIA", "SACCHETTO", "SALUTE", "SANGUE", "SAPONE", "SARDA", "SBALZO", "SCALCO", "SCARPA", "SCATOLA", "SCHERMO", "SCHERZO", "SCHIENA", "SCIENZA", "SCOGLIO", "SCOPA", "SCRITTOR", "SCUDO", "SCUOLA", "SECOLO", "SEGRETO", "SEGNALE", "SEMINA", "SENTIERO", "SERPENTE", "SERVIZIO", "SFIDA", "SFONDO", "SGUARDO", "SICURO", "SIGNRE", "SILENZIO", "SIMBOLO", "SINDCO", "SISTEMA", "SOCIETA", "SOGNO", "SOLDATO", "SOLE", "SPADA", "SPAZIO", "SPECCHIO", "SPETTACOLO", "SPIAGGIA", "SPIRITO", "SPONDA", "SPOSA", "SQUADRA", "STADIO", "STAGIONE", "STAMPA", "STANZA", "STATUA", "STELLA", "STIVALE", "STORIA", "STRADA", "STRANO", "STUDIO", "STUFO", "SUCCESSO", "SUDORE", "SUOLO", "SUONO", "SUPER", "TAPPETO", "TARTUFO", "TAVOLO", "TEATRO", "TECNICA", "TEMPO", "TEMPESTA", "TENDA", "TENORE", "TERRA", "TERRORE", "TESORO", "TESTA", "TIGRE", "TIMORE", "TITOLO", "TOVAGLIA", "TRAFFICO", "TRAGUARDO", "TRENO", "TRONO", "TUTTO", "UCCELLO", "UFFICIO", "ULTIMO", "UMANO", "UMILE", "UNGHIA", "UNICO", "UNIONE", "URGENTE", "USANZA", "USCITA", "UTILE", "VALIGIA", "VALLE", "VALORE", "VAPORE", "VEICOLO", "VELOCE", "VENEZIA", "VENTO", "VERDE", "VERGOGNA", "VERITA", "VERME", "VESTITO", "VETRO", "VIAGGIO", "VIETATO", "VIGILE", "VILLA", "VINCITORE", "VINO", "VIOLA", "VISITA", "VITA", "VIVACE", "VOLANTE", "VOLPE", "ZAINO", "ZAMPA", "ZATTERA", "ZEBRA", "ZIO", "ZOCCOLO", "ZOO", "ZUCCHERO", "ZUPPA"];
 
@@ -57,6 +63,20 @@ if (isTimerMode) {
 let vsHighScore = localStorage.getItem("wordman_high_score") || 0;
 highScoreEl.innerText = vsHighScore;
 
+// Controllo iniziale della posizione del record locale nel mondo
+async function fetchGlobalRank() {
+    if (vsHighScore > 0 && typeof ONLINE_LEADERBOARD !== "undefined") {
+        globalRankTag.innerText = "Calcolo rank globale...";
+        const data = await ONLINE_LEADERBOARD.getGlobalRank(vsHighScore);
+        if (data) {
+            globalRankTag.innerText = `🌍 Posizione Globale: #${data.rank} di ${data.totalPlayers}`;
+        } else {
+            globalRankTag.innerText = "";
+        }
+    }
+}
+fetchGlobalRank();
+
 btnEasy.addEventListener("click", () => { if (gameActive) return; WORD_LENGTH = 5; btnEasy.classList.add("active"); btnHard.classList.remove("active"); });
 btnHard.addEventListener("click", () => { if (gameActive) return; WORD_LENGTH = 6; btnHard.classList.add("active"); btnEasy.classList.remove("active"); });
 
@@ -76,6 +96,7 @@ function initRound() {
     currentTilePlayer = 0;
     messageEl.innerText = "";
     restartBtn.classList.add("hidden");
+    globalSaveContainer.classList.add("hidden");
 
     if (isTimerMode) {
         clearInterval(timerInterval);
@@ -106,7 +127,7 @@ function startTimer() {
         updateTimerUI();
         if (timeLeft <= 0) {
             clearInterval(timerInterval);
-            endGame(false, `⏰ Tempo Scaduto! La parola era: ${SECRET_WORD} [Tocca per Nuova]`);
+            endGame(false, `⏰ Tempo Scaduto! La parola era: ${SECRET_WORD}`);
         }
     }, 1000);
 }
@@ -142,7 +163,7 @@ function focusMobileInput() {
 }
 
 document.addEventListener("click", (e) => {
-    if (gameContainer.contains(e.target) && e.target !== restartBtn) focusMobileInput();
+    if (gameContainer.contains(e.target) && e.target !== restartBtn && e.target !== btnSubmitGlobal && e.target !== leaderboardUsername) focusMobileInput();
 });
 
 if (mobileInput) {
@@ -162,7 +183,7 @@ if (mobileInput) {
 }
 
 document.addEventListener("keydown", (e) => {
-    if (isGameOverState && e.key === "Enter") { initRound(); setTimeout(focusMobileInput, 100); return; }
+    if (isGameOverState && e.key === "Enter" && globalSaveContainer.classList.contains("hidden")) { initRound(); setTimeout(focusMobileInput, 100); return; }
     if (!gameActive || isGameOverState) return;
 
     if (e.key === "Enter") {
@@ -196,18 +217,14 @@ function checkPlayerWord() {
         return;
     }
 
-    // Riceve lo status dell'algoritmo visivo
     let letterStatuses = revealRowAndGetStatuses("p", currentAttemptPlayer, guess);
-    
-    // INVOCA IL MODULO ESTERNO: Calcola i punti delle singole lettere inserite ed aggiorna in tempo reale
     let puntiLettere = SCORING.calculateRowPoints(letterStatuses, WORD_LENGTH);
     totalScore += puntiLettere;
     scoreEl.innerText = totalScore;
 
     if (guess === SECRET_WORD) {
-        // INVOCA IL MODULO ESTERNO: Calcola il super bonus della vittoria (tentativo + tempo + difficoltà)
         let bonusVittoria = SCORING.calculateVictoryBonus(currentAttemptPlayer, WORD_LENGTH, isTimerMode, timeLeft);
-        endGame(true, `🏆 Vittoria! Parola indovinata! [Tocca per Continua]`, bonusVittoria);
+        endGame(true, `🏆 Vittoria! Parola indovinata!`, bonusVittoria);
         return;
     }
 
@@ -216,7 +233,7 @@ function checkPlayerWord() {
     currentTilePlayer = 0;
 
     if (currentAttemptPlayer === MAX_ATTEMPTS) {
-        endGame(false, `💥 Game Over! Parola: ${SECRET_WORD} [Tocca per Nuova]`);
+        endGame(false, `💥 Game Over! Parola: ${SECRET_WORD}`);
     }
 }
 
@@ -256,17 +273,49 @@ function endGame(playerWon, msg, bonusFinale = 0) {
             localStorage.setItem("wordman_high_score", vsHighScore);
             highScoreEl.innerText = vsHighScore;
         }
+        restartBtn.classList.remove("hidden");
     } else {
+        // Se c'è un Game Over definitivo, mostriamo l'invio globale dei punti accumulati fino ad ora
         streakCount = 0;
         streakEl.innerText = streakCount;
+        
+        if (totalScore > 0) {
+            globalSaveContainer.classList.remove("hidden");
+        } else {
+            restartBtn.classList.remove("hidden");
+        }
     }
 
     const li = document.createElement("li");
-    li.innerHTML = `${playerWon ? '✅' : '❌'} Parola: <b>${SECRET_WORD}</b>`;
+    li.innerHTML = `${playerWon ? '✅' : '❌'} Parola: <b>${SECRET_WORD}</b> (+${playerWon ? bonusFinale : 0}pt)`;
     document.getElementById("words-list").prepend(li);
-
-    restartBtn.classList.remove("hidden");
 }
+
+// Gestione invio record al Database Mondiale
+btnSubmitGlobal.addEventListener("click", async () => {
+    const username = leaderboardUsername.value.trim().toUpperCase();
+    if (!username) { alert("Inserisci un nome valido!"); return; }
+
+    btnSubmitGlobal.innerText = "Invio...";
+    btnSubmitGlobal.disabled = true;
+
+    const result = await ONLINE_LEADERBOARD.submitScore(username, totalScore);
+    if (result) {
+        messageEl.innerText = `🌍 Record registrato! Sei in posizione #${result.rank} globale su ${result.totalPlayers} giocatori!`;
+        fetchGlobalRank(); // Aggiorna il tag in alto
+    } else {
+        messageEl.innerText = "❌ Errore durante il salvataggio online.";
+    }
+
+    globalSaveContainer.classList.add("hidden");
+    restartBtn.classList.remove("hidden");
+    btnSubmitGlobal.innerText = "Invia Record";
+    btnSubmitGlobal.disabled = false;
+    
+    // Resetta il punteggio di sessione per la nuova serie
+    totalScore = 0;
+    scoreEl.innerText = totalScore;
+});
 
 restartBtn.addEventListener("click", () => { initRound(); setTimeout(focusMobileInput, 100); });
 
