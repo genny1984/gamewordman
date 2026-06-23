@@ -38,17 +38,19 @@ if (new URLSearchParams(window.location.search).get('mode') !== 'timer') {
     let highScore = localStorage.getItem("wordman_high_score") || 0;
     highScoreEl.innerText = highScore;
 
-    async function fetchGlobalRank() {
-        const el = document.getElementById("global-rank-tag");
-        if (!el) return;
-        el.innerText = "Calcolo rank globale...";
-        try {
-            const rank = await ONLINE_LEADERBOARD.calculateRank(highScore);
-            el.innerText = `🌍 Rank Globale: #${rank}`;
-        } catch (e) {
-            el.innerText = "Rank non disponibile";
-        }
+	async function fetchGlobalRank() {
+    const elementoRank = document.getElementById("global-rank-tag");
+    if (!elementoRank) return;
+    
+    elementoRank.innerText = "Calcolo rank globale...";
+    try {
+        // CORRETTO: Sostituito vsHighScore con highScore (la variabile reale di timer.js)
+        const rank = await ONLINE_LEADERBOARD.calculateRank(highScore);
+        elementoRank.innerText = `🌍 Rank Globale: #${rank}`;
+    } catch (error) {
+        elementoRank.innerText = "Rank non disponibile";
     }
+}
     fetchGlobalRank();
 
     btnEasy.addEventListener("click", () => {
