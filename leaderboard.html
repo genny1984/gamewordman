@@ -2,192 +2,56 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wordman - Classifica Globale</title>
+    <title>Classifica Wordman</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Stili specifici per rendere la classifica spettacolare */
-        .leaderboard-container {
-            max-width: 500px;
-            margin: 30px auto;
-            padding: 20px;
-            background: #1e1e24;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-            text-align: center;
-        }
-        .leaderboard-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-            font-size: 1.1rem;
-        }
-        .leaderboard-table th {
-            color: #888;
-            padding: 10px;
-            border-bottom: 2px solid #333;
-            text-transform: uppercase;
-            font-size: 0.9rem;
-        }
-        .leaderboard-table td {
-            padding: 12px 10px;
-            border-bottom: 1px solid #2a2a32;
-        }
-        .row-top-1 { color: #ffd700; font-weight: bold; } /* Oro */
-        .row-top-2 { color: #c0c0c0; font-weight: bold; } /* Argento */
-        .row-top-3 { color: #cd7f32; font-weight: bold; } /* Bronzo */
-        
-        .row-current-user {
-            background: rgba(29, 209, 161, 0.15);
-            color: #1dd1a1;
-            font-weight: bold;
-            border: 1px solid #1dd1a1;
-        }
-        .dots-row td {
-            text-align: center;
-            padding: 15px 0;
-            color: #666;
-            font-size: 1.5rem;
-            letter-spacing: 5px;
-        }
-        .back-btn {
-            background-color: #ff4757;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
-            font-size: 1rem;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background 0.2s;
-            width: 100%;
-            margin-top: 10px;
-        }
-        .back-btn:hover { background-color: #ff6b81; }
-        .mode-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .tab-btn {
-            flex: 1;
-            background: #2f3542;
-            color: #a4b0be;
-            border: none;
-            padding: 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .tab-btn.active {
-            background: #1dd1a1;
-            color: #1e1e24;
-        }
+        .leaderboard-container { max-width: 500px; margin: 30px auto; color: white; text-align: center; font-family: sans-serif; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        td, th { padding: 12px; border-bottom: 1px solid #333; }
+        .row-current-user { background: rgba(29, 209, 161, 0.2); color: #1dd1a1; font-weight: bold; }
+        .dots-row { color: #666; font-weight: bold; }
+        button { padding: 10px 20px; background: #538d4e; color: white; border: none; cursor: pointer; border-radius: 5px; }
     </style>
 </head>
 <body>
-
     <div class="leaderboard-container">
-        <h2>🏆 Classifica Globale</h2>
-        
-        <div class="mode-tabs">
-            <button id="tab-classic" class="tab-btn active">Classica</button>
-            <button id="tab-timer" class="tab-btn">A Tempo</button>
-        </div>
-
-        <table class="leaderboard-table">
-            <thead>
-                <tr>
-                    <th style="width: 20%">Pos</th>
-                    <th style="width: 50%">Giocatore</th>
-                    <th style="width: 30%">Punti</th>
-                </tr>
-            </thead>
-            <tbody id="leaderboard-body">
-                <tr>
-                    <td colspan="3" style="color: #888;">Caricamento punteggi...</td>
-                </tr>
-            </tbody>
+        <h2>🏆 Classifica Mondiale</h2>
+        <table id="leaderboard-table">
+            <thead><tr><th>Pos</th><th>Giocatore</th><th>Punti</th></tr></thead>
+            <tbody id="leaderboard-body"></tbody>
         </table>
-
-        <button class="back-btn" onclick="window.location.href='index.html'">↩ Torna al Gioco</button>
+        <br>
+        <button onclick="window.location.href='index.html'">Torna al Gioco</button>
     </div>
 
-    <!-- Integriamo lo script di gestione classifica -->
     <script src="online-leaderboard.js"></script>
     <script>
-        let currentViewMode = 'classic'; // o 'timer'
-
-        document.getElementById('tab-classic').addEventListener('click', () => {
-            currentViewMode = 'classic';
-            document.getElementById('tab-classic').classList.add('active');
-            document.getElementById('tab-timer').classList.remove('active');
-            renderLeaderboard();
-        });
-
-        document.getElementById('tab-timer').addEventListener('click', () => {
-            currentViewMode = 'timer';
-            document.getElementById('tab-timer').classList.add('active');
-            document.getElementById('tab-classic').classList.remove('active');
-            renderLeaderboard();
-        });
-
-        async function renderLeaderboard() {
-            const tbody = document.getElementById("leaderboard-body");
-            tbody.innerHTML = `<tr><td colspan="3" style="color: #888;">Caricamento in corso...</td></tr>`;
-
-            // Recuperiamo i dati completi elaborati da online-leaderboard.js
+        document.addEventListener("DOMContentLoaded", async () => {
+            const body = document.getElementById("leaderboard-body");
             const data = await ONLINE_LEADERBOARD.getLeaderboardData();
+
             if (!data) {
-                tbody.innerHTML = `<tr><td colspan="3" style="color: #ff4757;">Errore di connessione.</td></tr>`;
+                body.innerHTML = "<tr><td colspan='3'>Errore nel caricamento. Riprova più tardi.</td></tr>";
                 return;
             }
 
-            tbody.innerHTML = "";
-
-            // 1. Mostra i primi 10
-            data.top10.forEach(player => {
+            // Render Primi 10
+            data.top10.forEach(p => {
                 const tr = document.createElement("tr");
-                if (player.rank === 1) tr.classList.add("row-top-1");
-                else if (player.rank === 2) tr.classList.add("row-top-2");
-                else if (player.rank === 3) tr.classList.add("row-top-3");
-                
-                if (player.isCurrentUser) tr.classList.add("row-current-user");
-
-                tr.innerHTML = `
-                    <td>${player.rank}°</td>
-                    <td>${player.username} ${player.isCurrentUser ? ' (Tu)' : ''}</td>
-                    <td>${player.score}</td>
-                `;
-                tbody.appendChild(tr);
+                if (p.isCurrentUser) tr.className = "row-current-user";
+                tr.innerHTML = `<td>${p.rank}°</td><td>${p.username}</td><td>${p.score}</td>`;
+                body.appendChild(tr);
             });
 
-            // 2. Se l'utente esiste ed è FUORI dai primi 10, aggiungiamo i puntini e la sua riga dedicata
+            // Render riga utente se fuori top 10
             if (data.currentUserRow && data.currentUserRow.rank > 10) {
-                // Riga dei puntini sospensivi
-                const dotsTr = document.createElement("tr");
-                dotsTr.classList.add("dots-row");
-                dotsTr.innerHTML = `<td colspan="3">...</td>`;
-                tbody.appendChild(dotsTr);
-
-                // Riga dell'utente sfigato (ma orgoglioso) al 15° posto
-                const userTr = document.createElement("tr");
-                userTr.classList.add("row-current-user");
-                userTr.innerHTML = `
-                    <td>${data.currentUserRow.rank}°</td>
-                    <td>${data.currentUserRow.username} (Tu)</td>
-                    <td>${data.currentUserRow.score}</td>
-                `;
-                tbody.appendChild(userTr);
+                body.innerHTML += "<tr class='dots-row'><td colspan='3'>...</td></tr>";
+                const tr = document.createElement("tr");
+                tr.className = "row-current-user";
+                tr.innerHTML = `<td>${data.currentUserRow.rank}°</td><td>${data.currentUserRow.username} (Tu)</td><td>${data.currentUserRow.score}</td>`;
+                body.appendChild(tr);
             }
-            
-            if (data.top10.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" style="color: #888;">Ancora nessun punteggio registrato.</td></tr>`;
-            }
-        }
-
-        // Avvio automatico al caricamento della pagina
-        renderLeaderboard();
+        });
     </script>
 </body>
 </html>
