@@ -36,6 +36,33 @@ if (new URLSearchParams(window.location.search).get('mode') !== 'timer') {
     const btnHard = document.getElementById("btn-hard");
     const btnStart = document.getElementById("start-session-btn");
 
+    // CREAZIONE INPUT INVISIBILE PER FORZARE LA TASTIERA SU MOBILE
+    const mobileInput = document.createElement("input");
+    mobileInput.type = "text";
+    mobileInput.setAttribute("autocomplete", "off");
+    mobileInput.setAttribute("autocapitalize", "none");
+    mobileInput.setAttribute("spellcheck", "false");
+    mobileInput.style.position = "absolute";
+    mobileInput.style.opacity = "0";
+    mobileInput.style.pointerEvents = "none";
+    mobileInput.style.zIndex = "-1000";
+    document.body.appendChild(mobileInput);
+
+    // Toccare il tabellone apre la tastiera
+    board.addEventListener("click", () => {
+        if (!restartBtn.classList.contains("hidden")) return;
+        mobileInput.focus();
+    });
+
+    // Intercetta la digitazione da mobile (gestisce il bug del tasto 229 di Android)
+    mobileInput.addEventListener("input", (e) => {
+        if (e.data) {
+            const key = e.data.toUpperCase();
+            if (key >= "A" && key <= "Z") addLetter(key);
+        }
+        mobileInput.value = ""; 
+    });
+
     let highScore = localStorage.getItem("wordman_high_score") || 0;
     highScoreEl.innerText = highScore;
 
@@ -118,9 +145,24 @@ if (new URLSearchParams(window.location.search).get('mode') !== 'timer') {
     }
 
     window.addEventListener("keydown", (e) => {
+        if (document.activeElement === document.getElementById("leaderboard-username")) return;
+
+        // Routing speciale per i comandi inviati tramite l'input mobile
+        if (e.target === mobileInput) {
+            const key = e.key.toUpperCase();
+            if (key === "ENTER") {
+                if (!restartBtn.classList.contains("hidden")) restartBtn.click();
+                else checkRow();
+                e.preventDefault();
+            } else if (key === "BACKSPACE") {
+                if (restartBtn.classList.contains("hidden")) removeLetter();
+                e.preventDefault();
+            }
+            return;
+        }
+
         const key = e.key.toUpperCase();
 
-        // SE IL PULSANTE DI CONTINUAZIONE È ATTIVO, L'INVIO AVANZA ALLA PROSSIMA PAROLA
         if (!restartBtn.classList.contains("hidden")) {
             if (key === "ENTER") {
                 restartBtn.click();
@@ -144,6 +186,7 @@ if (new URLSearchParams(window.location.search).get('mode') !== 'timer') {
         }
     }
 
+    // Esportata per permettere la rimozione corretta
     function removeLetter() {
         if (currentTile > 0) {
             currentTile--;
@@ -161,7 +204,8 @@ if (new URLSearchParams(window.location.search).get('mode') !== 'timer') {
             if (tile && tile.innerText) guess += tile.innerText;
         }
 
-        // INTERCETTAZIONE DEBUG PRIMA DEL CONTROLLO LUNGHEZZA
+        guess = guess.trim().toUpperCase();
+
         if (guess === "DEBUG") {
             isDebugMode = !isDebugMode; 
             updateDebugDisplay();

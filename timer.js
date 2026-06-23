@@ -40,6 +40,39 @@ if (new URLSearchParams(window.location.search).get('mode') === 'timer') {
     const btnStart = document.getElementById("start-session-btn");
     const globalSaveContainer = document.getElementById("global-save-container");
 
+    // CREAZIONE INPUT INVISIBILE PER FORZARE LA TASTIERA SU MOBILE
+    const mobileInput = document.createElement("input");
+    mobileInput.type = "text";
+    mobileInput.setAttribute("autocomplete", "off");
+    mobileInput.setAttribute("autocapitalize", "none");
+    mobileInput.setAttribute("spellcheck", "false");
+    mobileInput.style.position = "absolute";
+    mobileInput.style.opacity = "0";
+    mobileInput.style.pointerEvents = "none";
+    mobileInput.style.zIndex = "-1000";
+    document.body.appendChild(mobileInput);
+
+    board.addEventListener("click", () => {
+        if (!restartBtn.classList.contains("hidden")) return;
+        mobileInput.focus();
+    });
+
+    mobileInput.addEventListener("input", (e) => {
+        if (timeLeft <= 0) {
+            mobileInput.value = "";
+            return;
+        }
+        if (e.data) {
+            const key = e.data.toUpperCase();
+            if (key >= "A" && key <= "Z") {
+                btnEasy.setAttribute("disabled", "true");
+                btnHard.setAttribute("disabled", "true");
+                addLetter(key);
+            }
+        }
+        mobileInput.value = "";
+    });
+
     let highScore = localStorage.getItem("wordle_high_score_timer") || 0;
     highScoreEl.innerText = highScore;
 
@@ -188,9 +221,23 @@ if (new URLSearchParams(window.location.search).get('mode') === 'timer') {
     });
 
     window.addEventListener("keydown", (e) => {
+        if (document.activeElement === document.getElementById("leaderboard-username")) return;
+
+        if (e.target === mobileInput) {
+            const key = e.key.toUpperCase();
+            if (key === "ENTER") {
+                if (!restartBtn.classList.contains("hidden")) restartBtn.click();
+                else checkRow();
+                e.preventDefault();
+            } else if (key === "BACKSPACE") {
+                if (restartBtn.classList.contains("hidden")) removeLetter();
+                e.preventDefault();
+            }
+            return;
+        }
+
         const key = e.key.toUpperCase();
 
-        // SE IL PULSANTE DI CONTINUAZIONE È ATTIVO, L'INVIO AVANZA ALLA PROSSIMA PAROLA
         if (!restartBtn.classList.contains("hidden")) {
             if (key === "ENTER") {
                 restartBtn.click();
@@ -237,7 +284,8 @@ if (new URLSearchParams(window.location.search).get('mode') === 'timer') {
             if (tile && tile.innerText) guess += tile.innerText;
         }
 
-        // INTERCETTAZIONE DEBUG PRIMA DEL CONTROLLO LUNGHEZZA
+        guess = guess.trim().toUpperCase();
+
         if (guess === "DEBUG") {
             isDebugMode = !isDebugMode; 
             updateDebugDisplay();
