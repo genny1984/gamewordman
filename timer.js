@@ -176,7 +176,7 @@ if (new URLSearchParams(window.location.search).get('mode') === 'timer') {
             if (!debugEl) {
                 debugEl = document.createElement("div");
                 debugEl.id = "debug-display";
-                debugEl.style = "color:#00ff00; font-weight:bold; font-size:1.2rem; margin-bottom:15px; background:rgba(0,255,0,0.1); padding:5px 15px; border-radius:4px; border:1px dashed #00ff00;";
+                debugEl.style = "color:#00ff00; font-weight:bold; font-size:1.2rem; margin-bottom:15px; background:rgba(0,255,0,0.1); padding:5px 15px; border-radius:4px; border:1px dashed #00ff00; text-align:center; width:100%;";
                 document.getElementById("difficulty-container").after(debugEl);
             }
             debugEl.innerText = `🔍 [DEBUG TIMER] Parola: ${SECRET_WORD}`;
@@ -188,9 +188,18 @@ if (new URLSearchParams(window.location.search).get('mode') === 'timer') {
     });
 
     window.addEventListener("keydown", (e) => {
-        if (currentAttempt >= MAX_ATTEMPTS || !restartBtn.classList.contains("hidden") || timeLeft <= 0) return;
-
         const key = e.key.toUpperCase();
+
+        // SE IL PULSANTE DI CONTINUAZIONE È ATTIVO, L'INVIO AVANZA ALLA PROSSIMA PAROLA
+        if (!restartBtn.classList.contains("hidden")) {
+            if (key === "ENTER") {
+                restartBtn.click();
+            }
+            return;
+        }
+
+        if (currentAttempt >= MAX_ATTEMPTS || timeLeft <= 0) return;
+
         if (key.length === 1 && key >= "A" && key <= "Z") {
             btnEasy.setAttribute("disabled", "true");
             btnHard.setAttribute("disabled", "true");
@@ -228,6 +237,7 @@ if (new URLSearchParams(window.location.search).get('mode') === 'timer') {
             if (tile && tile.innerText) guess += tile.innerText;
         }
 
+        // INTERCETTAZIONE DEBUG PRIMA DEL CONTROLLO LUNGHEZZA
         if (guess === "DEBUG") {
             isDebugMode = !isDebugMode; 
             updateDebugDisplay();

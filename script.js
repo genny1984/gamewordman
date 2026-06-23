@@ -12,6 +12,7 @@ if (new URLSearchParams(window.location.search).get('mode') !== 'timer') {
     let totalScore = 0;
     let streakCount = 0; 
     let isGameOverState = false; 
+    let isDebugMode = false;
 
     const EASY_WORDS = ["TRENO", "GATTO", "PIZZA", "CORSA", "FUOCO", "MONDO", "TASTO", "LIBRO", "VERDE", "FIORE", "ACQUA", "AMICO", "ANIMA", "AEREO", "BARCA", "BOCCA", "BRAVO", "CAFFE", "CANTO", "CAPRA", "CARTA", "CERVO", "CIELO", "CLIMA", "COLPO", "COSTA", "CUORE", "DENTE", "DISCO", "DOLCE", "DONNA", "FANGO", "FESTA", "FIUME", "FORMA", "FORTE", "FUSTO", "GAMBA", "GIOCO", "GONNA", "GRANO", "GRAVE", "GUIDA", "GUSTO", "ISOLA", "LARGO", "LATTE", "LEGNO", "LENTO", "LINEA", "PADRE", "PANE", "PAESE", "PELLE", "PENNA", "PIANO", "PIEDE", "PORTO", "POSTO", "PRATO", "PRIMA", "PUNTO", "RADIO", "RAGNO", "REGNO", "ROSSO", "RUOTA", "SCALA", "SOGNO", "SOLDI", "SPINA", "SUOLO", "TASCA", "TERRA", "TESTA", "TORRE", "VENTO", "VETRO", "VOLTO", "ZAINO", "ZUPPA", "CORDA", "PORTA", "CREMA", "TASSE", "SCAFO", "PARCO", "CORPO", "PRONO", "ORAFO"];
     const HARD_WORDS = ["ALBERO", "LAVORO", "STRADA", "CHIESA", "PIANTO", "SABBIA", "STORIA", "SANGUE", "SCARPA", "SCUOLA", "GIORNO", "TEATRO", "POESIA", "FRUTTO", "TAVOLO", "STADIO", "SVOLTA", "PATRIA", "FUTURO", "MEDICO", "NATURA", "PREZZO", "PIETRA", "BLOCCO", "CUGINO", "DOTTOR", "BRUTTO", "FREDDO", "PULITO", "CHIARO", "OSCURO", "FELICE", "STANCO", "PRONTO", "ONESTO", "SICURO", "ANANAS", "AVVISO", "AZIENDA", "ANELLO", "CACCIA", "CATENA", "CLASSE", "CUCINA", "DIVISA", "DOCCIA", "DOMANI", "ESTATE", "FAVOLA", "FEBBRE", "FRECCIA", "FRONTE", "GELATO", "GIACCA", "GIRAFFA", "GOMITO", "GRAZIA", "GUANTO", "LABBRO", "LANCIA", "MOSTRO", "MOTORE", "NUMERO", "PAGINA", "PAROLA", "PATATA", "PECORA", "PILOTA", "POSTER", "PRANZO", "QUADRO", "REGINA", "SABATO", "SALUTE", "SAPONE", "SATINO", "SCOPA", "SECOLO", "SIRENA", "SPEZIA", "SAPORE", "STAMPA", "STELLA", "TENDA", "TIGRE", "TIMONE", "TOMBA", "VIAGGIO", "SCONTO", "STREGA", "BRONZO", "BIANCO", "BIONDO", "DIVANO", "FASCIA", "FOGLIA", "SGUARDO", "CANDELA", "NUVOLA", "SANGUE"];
@@ -38,19 +39,17 @@ if (new URLSearchParams(window.location.search).get('mode') !== 'timer') {
     let highScore = localStorage.getItem("wordman_high_score") || 0;
     highScoreEl.innerText = highScore;
 
-	async function fetchGlobalRank() {
-    const elementoRank = document.getElementById("global-rank-tag");
-    if (!elementoRank) return;
-    
-    elementoRank.innerText = "Calcolo rank globale...";
-    try {
-        // CORRETTO: Sostituito vsHighScore con highScore (la variabile reale di timer.js)
-        const rank = await ONLINE_LEADERBOARD.calculateRank(highScore);
-        elementoRank.innerText = `🌍 Rank Globale: #${rank}`;
-    } catch (error) {
-        elementoRank.innerText = "Rank non disponibile";
+    async function fetchGlobalRank() {
+        const el = document.getElementById("global-rank-tag");
+        if (!el) return;
+        el.innerText = "Calcolo rank globale...";
+        try {
+            const rank = await ONLINE_LEADERBOARD.calculateRank(highScore);
+            el.innerText = `🌍 Rank Globale: #${rank}`;
+        } catch (e) {
+            el.innerText = "Rank non disponibile";
+        }
     }
-}
     fetchGlobalRank();
 
     btnEasy.addEventListener("click", () => {
@@ -82,6 +81,19 @@ if (new URLSearchParams(window.location.search).get('mode') !== 'timer') {
         }
     }
 
+    function updateDebugDisplay() {
+        let debugEl = document.getElementById("debug-display");
+        if (isDebugMode) {
+            if (!debugEl) {
+                debugEl = document.createElement("div");
+                debugEl.id = "debug-display";
+                debugEl.style = "color:#00ff00; font-weight:bold; font-size:1.2rem; margin-bottom:15px; background:rgba(0,255,0,0.1); padding:5px 15px; border-radius:4px; border:1px dashed #00ff00; text-align:center; width:100%;";
+                document.getElementById("difficulty-container").after(debugEl);
+            }
+            debugEl.innerText = `🔍 [DEBUG CLASSICA] Parola: ${SECRET_WORD}`;
+        } else { if (debugEl) debugEl.remove(); }
+    }
+
     function startNewRound() {
         const pool = (WORD_LENGTH === 5) ? EASY_WORDS : HARD_WORDS;
         SECRET_WORD = pool[Math.floor(Math.random() * pool.length)];
@@ -89,6 +101,7 @@ if (new URLSearchParams(window.location.search).get('mode') !== 'timer') {
         currentAttempt = 0;
         currentTile = 0;
         showMessage("");
+        updateDebugDisplay();
         
         restartBtn.classList.add("hidden");
         globalSaveContainer.classList.add("hidden");
@@ -105,15 +118,26 @@ if (new URLSearchParams(window.location.search).get('mode') !== 'timer') {
     }
 
     window.addEventListener("keydown", (e) => {
-        if (currentAttempt >= MAX_ATTEMPTS || !restartBtn.classList.contains("hidden")) return;
         const key = e.key.toUpperCase();
+
+        // SE IL PULSANTE DI CONTINUAZIONE È ATTIVO, L'INVIO AVANZA ALLA PROSSIMA PAROLA
+        if (!restartBtn.classList.contains("hidden")) {
+            if (key === "ENTER") {
+                restartBtn.click();
+            }
+            return;
+        }
+
+        if (currentAttempt >= MAX_ATTEMPTS) return;
+        
         if (key.length === 1 && key >= "A" && key <= "Z") addLetter(key);
         if (key === "BACKSPACE") removeLetter();
         if (key === "ENTER") checkRow();
     });
 
     function addLetter(letter) {
-        if (currentTile < WORD_LENGTH) {
+        const maxInput = isDebugMode ? 10 : WORD_LENGTH;
+        if (currentTile < maxInput) {
             const tile = document.getElementById(`tile-${currentAttempt * WORD_LENGTH + currentTile}`);
             if (tile) tile.innerText = letter; 
             currentTile++; 
@@ -135,6 +159,19 @@ if (new URLSearchParams(window.location.search).get('mode') !== 'timer') {
         for (let i = 0; i < currentTile; i++) {
             const tile = document.getElementById(`tile-${startIndex + i}`);
             if (tile && tile.innerText) guess += tile.innerText;
+        }
+
+        // INTERCETTAZIONE DEBUG PRIMA DEL CONTROLLO LUNGHEZZA
+        if (guess === "DEBUG") {
+            isDebugMode = !isDebugMode; 
+            updateDebugDisplay();
+            for (let i = 0; i < currentTile; i++) {
+                const tile = document.getElementById(`tile-${startIndex + i}`);
+                if (tile) tile.innerText = "";
+            }
+            currentTile = 0; 
+            showMessage(isDebugMode ? "🔧 Debug attivato!" : "🔒 Debug disattivato.");
+            return; 
         }
 
         if (currentTile !== WORD_LENGTH) {
