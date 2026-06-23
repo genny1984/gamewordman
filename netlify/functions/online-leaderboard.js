@@ -1,42 +1,88 @@
-/**
- * WORDMAN - Modulo Classifica Mondiale Online
- */
-const ONLINE_LEADERBOARD = {
-    // URL della funzione serverless di Netlify (la creeremo tra poco)
-    ENDPOINT: '/.netlify/functions/leaderboard',
+const { Client } = require('pg');
 
-    /**
-     * Invia un punteggio al database mondiale e restituisce la posizione globale
-     * @param {string} username - Il nome del giocatore
-     * @param {number} score - Il punteggio totale della sessione
-     * @returns {Promise<object>} - Contiene { rank: posizione, totalPlayers: totale }
-     */
-    submitScore: async function(username, score) {
-        try {
-            const response = await fetch(this.ENDPOINT, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: username, score: score })
-            });
-            if (!response.ok) throw new Error('Errore di rete');
-            return await response.json(); // Restituisce { rank: X, totalPlayers: Y }
-        } catch (error) {
-            console.error("Impossibile salvare il record online:", error);
-            return null;
-        }
-    },
+exports.handler = async (event, context) => {
+    const headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
+    };
 
-    /**
-     * Recupera la posizione globale attuale di un determinato punteggio senza registrarlo
-     */
-    getGlobalRank: async function(score) {
-        try {
-            const response = await fetch(`${this.ENDPOINT}?score=${score}`);
-            if (!response.ok) throw new Error('Errore di rete');
-            return await response.json(); // Restituisce { rank: X, totalPlayers: Y }
-        } catch (error) {
-            console.error("Impossibile recuperare il rank online:", error);
-            return null;
+    if (event.httpMethod === 'OPTIONS') {
+        return { statusCode: 200, headers, body: '' };
+    }
+
+    // Configurazione client Postgres nativo di Netlify
+    const client = new Client({
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false }
+    });
+
+    try {
+        await client.connect();
+
+        // 1. Creazione automatica della tabella se non esiste (così non devi farlo a mano!)
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS leaderboard (
+                id SERIAL PRIMARY KEY,
+                username VARCHAR(50) NOT NULL,
+                score INT NOT NULL,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+            );
+        `);
+
+        // --- CASO POST: SALVATAGGIO DI UN NUOVO RECORD ---
+        if (event.httpMethod === 'POST') {
+            const { username, score } = JSON.parse(event.body);
+            if (!username || score === undefined) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'Dati mancanti' }) };
+            }
+
+            // Inseriamo il record
+            await client.query('INSERT INTO leaderboard (username, score) VALUES ($1, $2)', [username, parseInt(score)]);
+
+            // Calcoliamo la posizione globale
+            const rankRes = await client.query('SELECT COUNT(*) FROM leaderboard WHERE score > $1', [score]);
+            const higherScores = parseInt(rankRes.rows[0].count);
+
+            // Calcoliamo il totale dei giocatori
+            const totalRes = await client.query('SELECT COUNT(*) FROM leaderboard');
+            const totalPlayers = parseInt(totalRes.rows[0].count);
+
+            await client.end();
+            return {
+                statusCode: 200,
+                headers,
+                body: JSON.stringify({ rank: higherScores + 1, totalPlayers: totalPlayers })
+            };
         }
+
+        // --- CASO GET: CONTROLLO POSIZIONE DI UN PUNTEGGIO ---
+        if (event.httpMethod === 'GET') {
+            const score = parseInt(event.queryStringParameters.score || 0);
+
+            const rankRes = await client.query('SELECT COUNT(*) FROM leaderboard WHERE score > $1', [score]);
+            const higherScores = parseInt(rankRes.rows[0].count);
+
+            const totalRes = await client.query('SELECT COUNT(*) FROM leaderboard');
+            const totalPlayers = parseInt(totalRes.rows[0].count);
+
+            await client.end();
+            return {
+                statusCode: 200,
+                headers,
+                body: JSON.stringify({ rank: higherScores + 1, totalPlayers: totalPlayers })
+            };
+        }
+
+        await client.end();
+        return { statusCode: 405, headers, body: 'Metodo non consentito' };
+
+    } catch (error) {
+        try { await client.end(); } catch(e) {}
+        return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({ error: error.message })
+        };
     }
 };
