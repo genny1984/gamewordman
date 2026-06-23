@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Wordman - Survival</title>
+    <link rel="stylesheet" href="style.css?v=3.0">
+</head>
+<body>
+
+    <div id="top-bar-container">
+        <div id="mode-selector">
+            <button id="btn-mode-classic" class="mode-btn">Classica</button>
+            <button id="btn-mode-timer" class="mode-btn">⏱️ A Tempo</button>
+        </div>
+        <div id="high-score-container">🏆 Record: <span id="high-score">0</span></div>
+    </div>
+
+    <h1>WORDMAN</h1>
+
+    <div id="timer-wrapper">
+        <div id="timer-bar"></div>
+        <div id="timer-text">60s</div>
+    </div>
+
+    <div id="difficulty-container">
+        <h2>Seleziona la lunghezza per iniziare:</h2>
+        <button id="btn-easy" class="diff-btn active">Facile (5 Lettere)</button>
+        <button id="btn-hard" class="diff-btn">Difficile (6 Lettere)</button>
+        <button id="start-session-btn" style="margin-top: 15px; padding: 12px 24px; font-weight: bold; background-color: #538d4e; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1.1rem; width: 100%;">INIZIA A GIOCARE</button>
+    </div>
+    
+    <div id="game-container" class="hidden">
+        <div id="game-layout-wrapper" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; align-items: flex-start; width: 100%; max-width: 800px; margin: 0 auto;">
+            
+            <div id="left-column">
+                <div class="calderone-container">
+                    <h2>🧪 Il Calderone</h2>
+                    <div class="score-total">Punti Sessione: <span id="current-score">0</span></div>
+                    <div class="streak-total">Serie Attuale: <span id="current-streak">0</span></div>
+                    <ul id="words-list" style="list-style: none; margin-top: 10px;"></ul>
+                </div>
+
+                <div class="instructions-container">
+                    <h2>Come Giocare</h2>
+                    <p id="game-desc">Indovina la parola in <strong>6 tentativi</strong>. Se perdi è Game Over totale.</p>
+                    <ul>
+                        <li><span class="demo-box correct">V</span> <strong>Verde:</strong> Posto giusto (+20pt).</li>
+                        <li><span class="demo-box present">G</span> <strong>Giallo:</strong> Posto sbagliato (+10pt).</li>
+                        <li><span class="demo-box absent">G</span> <strong>Grigio:</strong> Assente.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <canvas id="hangman" width="200" height="250"></canvas>
+            <div id="game-board"></div>
+            
+        </div>
+        
+        <input type="text" id="mobile-keyboard-trigger" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" style="position: absolute; opacity: 0; pointer-events: none; left: -9999px;">
+    </div>
+
+    <div id="message"></div>
+    <button id="restart-btn" class="hidden">Continua</button>
+
+    <!-- Importazione dei file script: prima la logica punti, poi l'applicazione -->
+    <script src="scoring.js?v=3.0"></script>
+    <script src="script.js?v=3.0"></script>
+</body>
+</html>
