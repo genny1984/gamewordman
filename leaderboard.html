@@ -4,14 +4,27 @@
     <meta charset="UTF-8">
     <title>Classifica Wordman</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        .leaderboard-container { max-width: 500px; margin: 30px auto; color: white; text-align: center; font-family: sans-serif; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        td, th { padding: 12px; border-bottom: 1px solid #333; }
-        .row-current-user { background: rgba(29, 209, 161, 0.2); color: #1dd1a1; font-weight: bold; }
-        .dots-row { color: #666; font-weight: bold; }
-        button { padding: 10px 20px; background: #538d4e; color: white; border: none; cursor: pointer; border-radius: 5px; }
-    </style>
+	<style>
+		/* Stile coerente con il resto del gioco */
+		.back-btn {
+			background-color: #1e1e1f;
+			color: #888;
+			border: 1px solid #3a3a3c;
+			padding: 10px 20px;
+			font-size: 1rem;
+			font-weight: bold;
+			cursor: pointer;
+			border-radius: 4px;
+			margin-top: 20px;
+			transition: 0.2s;
+		}
+		.back-btn:hover {
+			background-color: #3a3a3c;
+			color: white;
+		}
+	</style>
+
+	<button class="back-btn" onclick="window.location.href='index.html'">↩ Torna al Gioco</button>
 </head>
 <body>
     <div class="leaderboard-container">

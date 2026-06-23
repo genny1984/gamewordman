@@ -64,3 +64,39 @@ const ONLINE_LEADERBOARD = {
         }
     }
 };
+
+// Dentro ONLINE_LEADERBOARD, in online-leaderboard.js
+getLeaderboardData: async function() {
+    const url = `${this.SUPABASE_URL}/rest/v1/leaderboard?select=*&order=score.desc`;
+    try {
+        const response = await fetch(url, {
+            headers: {
+                'apikey': this.SUPABASE_KEY,
+                'Authorization': `Bearer ${this.SUPABASE_KEY}`,
+                'Range-Unit': 'items'
+            }
+        });
+
+        if (!response.ok) {
+            console.error("Errore HTTP:", response.status);
+            return null;
+        }
+
+        const allRecords = await response.json();
+        console.log("Record scaricati:", allRecords); // Controlla la console (F12)
+
+        const myToken = this._getOrCreateUserToken();
+        return {
+            top10: allRecords.slice(0, 10).map((r, i) => ({
+                rank: i + 1,
+                username: r.username,
+                score: r.score,
+                isCurrentUser: (r.user_token === myToken)
+            })),
+            currentUserRow: allRecords.find(r => r.user_token === myToken)
+        };
+    } catch (e) {
+        console.error("Errore critico:", e);
+        return null;
+    }
+}
