@@ -40,34 +40,66 @@ if (new URLSearchParams(window.location.search).get('mode') === 'timer') {
     const btnStart = document.getElementById("start-session-btn");
     const globalSaveContainer = document.getElementById("global-save-container");
 
-    // CREAZIONE INPUT FISSO E ULTRA-INVISIBILE PER PREVENIRE SALTI DI SCHERMO
-    const mobileInput = document.createElement("input");
-    mobileInput.type = "text";
-    mobileInput.setAttribute("autocomplete", "off");
-    mobileInput.setAttribute("autocapitalize", "none");
-    mobileInput.setAttribute("spellcheck", "false");
-    mobileInput.style.position = "fixed";
-    mobileInput.style.top = "0";
-    mobileInput.style.left = "0";
-    mobileInput.style.width = "100vw";
-    mobileInput.style.height = "0";
-    mobileInput.style.opacity = "0";
-    mobileInput.style.pointerEvents = "none";
-    mobileInput.style.zIndex = "-1000";
-    document.body.appendChild(mobileInput);
+// CREAZIONE INPUT FISSO E ULTRA-INVISIBILE (Senza attivare Password Manager o Suggerimenti)
+const mobileInput = document.createElement("input");
+mobileInput.type = "text";
+// Cambiamo l'inputmode in "search" o "text" ma bloccando ogni tipo di autocompilazione nefasta
+mobileInput.setAttribute("inputmode", "text"); 
+mobileInput.setAttribute("autocomplete", "one-time-code"); // Trucco per disattivare il gestore password/chiavi di Chrome
+mobileInput.setAttribute("autocapitalize", "characters");  // Forza le maiuscole, comodo per Wordle
+mobileInput.setAttribute("spellcheck", "false");
+// Attributi extra per blindare l'autofill di Google
+mobileInput.setAttribute("name", "wordle-input-field");
+mobileInput.setAttribute("id", "wordle-hidden-input");
 
-    // Inizializzato con uno spazio per intercettare stabilmente il Backspace su Android
-    mobileInput.value = " ";
+mobileInput.style.position = "fixed";
+mobileInput.style.top = "0";
+mobileInput.style.left = "0";
+mobileInput.style.width = "100vw";
+mobileInput.style.height = "0";
+mobileInput.style.opacity = "0";
+mobileInput.style.pointerEvents = "none";
+mobileInput.style.zIndex = "-1000";
+document.body.appendChild(mobileInput);
 
-    function focusMobileInput() {
-        if (!restartBtn.classList.contains("hidden")) return;
-        mobileInput.focus({ preventScroll: true });
-        // Centra la griglia attiva salvando l'esperienza di scrittura
-        setTimeout(() => {
-            board.scrollIntoView({ behavior: "smooth", block: "center" });
-        }, 100);
-    }
+// Usiamo una singola lettera standard (es. "X") invece dello spazio per resettare ed evitare i suggerimenti predittivi basati sulle vecchie parole
+mobileInput.value = "X";
 
+function focusMobileInput() {
+    if (!restartBtn.classList.contains("hidden")) return;
+    mobileInput.focus({ preventScroll: true });
+    setTimeout(() => {
+        board.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 100);
+}
+
+	// Gestione input mobile corretta senza accumulo di testo
+	mobileInput.addEventListener("input", (e) => {
+		if (typeof timeLeft !== 'undefined' && timeLeft <= 0) {
+			mobileInput.value = "X";
+			return;
+		}
+		
+		const val = mobileInput.value;
+		
+		// Se la stringa è vuota, significa che l'utente ha premuto Backspace cancellando la "X"
+		if (val.length === 0) {
+			if (restartBtn.classList.contains("hidden")) removeLetter();
+			mobileInput.value = "X"; // Resetta immediatamente lo stato
+		} 
+		// Se è maggiore di 1, l'utente ha digitato un carattere dopo la "X"
+		else if (val.length > 1) {
+			const key = val.charAt(1).toUpperCase();
+			if (key >= "A" && key <= "Z") {
+				if (typeof btnEasy !== 'undefined') {
+					btnEasy.setAttribute("disabled", "true");
+					btnHard.setAttribute("disabled", "true");
+				}
+				addLetter(key);
+			}
+			mobileInput.value = "X"; // Resetta immediatamente svuotando la cronologia di digitazione
+		}
+	});
     // Toccando qualunque punto della schermata riattiva il focus e centra la griglia
     document.addEventListener("click", (e) => {
         if (e.target.id === "leaderboard-username" || e.target.closest("button") || e.target.closest(".diff-btn") || e.target.closest("#mode-selector")) return;
