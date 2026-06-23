@@ -188,39 +188,38 @@ h1 {
 
 .hidden { display: none !important; }
 
-/* === LAYOUT OTTIMIZZATO PER SMARTPHONE === */
 @media (max-width: 768px) {
     body {
         justify-content: flex-start !important;
     }
 
     #game-container {
-        flex-direction: column !important; /* Mette tutto in colonna su mobile */
+        flex-direction: column !important;
         align-items: center !important;
         gap: 15px !important;
     }
 
     #left-column {
         width: 100% !important;
-        order: 3 !important; /* Sposta il Calderone sotto il gioco */
+        order: 3 !important;
     }
 
     .instructions-container {
-        display: none !important; /* Nasconde le istruzioni su mobile per salvare spazio */
+        display: none !important;
     }
 
     #hangman {
-        max-width: 130px !important; /* Rimpicciolisce la corda dell'impiccato */
+        max-width: 130px !important;
         order: 1 !important;
     }
 
     #game-board {
-        max-width: 280px !important; /* Stringe la griglia per farla stare nello schermo */
+        max-width: 280px !important;
         order: 2 !important;
     }
 
     .tile {
-        font-size: 1.3rem !important; /* Lettere leggermente più piccole */
+        font-size: 1.3rem !important;
     }
 
     h1 {
