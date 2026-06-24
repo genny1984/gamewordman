@@ -1,147 +1,154 @@
-const ONLINE_LEADERBOARD = {
-    SUPABASE_URL: 'https://ezopsdhrggolwffbwknb.supabase.co',
-    SUPABASE_KEY: 'sb_publishable_5h0aollwcdkBZr3XxN4qCw_n4npr9X0',
-
-    // 1. Genera o recupera il codice invisibile (Usa la chiave originale per non perdere i record di ieri!)
-    _getOrCreateUserToken: function() {
-        let token = localStorage.getItem('wordman_device_token');
-        if (!token) {
-            token = 'usr_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36);
-            localStorage.setItem('wordman_device_token', token);
+<!-- Versione: 1.1 -->
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classifica Wordman</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Importazione Font Arcade -->
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            background-color: #121213;
+            color: #ffffff;
+            /* Applica il font arcade a tutta la pagina */
+            font-family: 'VT323', monospace; 
+            margin: 0;
+            padding: 20px;
         }
-        return token;
-    },
 
-    // 2. Invio del punteggio (Il sistema anti-doppioni di ieri)
-    submitScore: async function(username, score) {
-        const token = this._getOrCreateUserToken();
-        const checkUrl = `${this.SUPABASE_URL}/rest/v1/leaderboard?user_token=eq.${token}`;
+        .leaderboard-container { 
+            max-width: 500px; 
+            margin: 0 auto; 
+            text-align: center; 
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            color: #538d4e;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 0px #000000;
+        }
+
+        /* Stile Griglia Arcade */
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 10px; 
+            background-color: #1e1e1f;
+            border: 2px solid #538d4e;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        th {
+            background-color: #538d4e;
+            color: white;
+            font-size: 1.4rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 12px;
+            border: 1px solid #3a3a3c;
+        }
+
+        td { 
+            padding: 12px; 
+            border: 1px solid #3a3a3c; 
+            font-size: 1.3rem;
+        }
+
+        /* Alternanza colori per le righe (stile tabulato) */
+        tbody tr:nth-child(even) {
+            background-color: #181819;
+        }
+
+        /* Evidenziazione dell'utente corrente */
+        .row-current-user { 
+            background: rgba(29, 209, 161, 0.15) !important; 
+            color: #1dd1a1; 
+            font-weight: bold; 
+        }
+
+        .dots-row td { 
+            color: #666; 
+            letter-spacing: 5px; 
+            background-color: #1e1e1f !important;
+        }
+
+        /* Bottone in stile Retro */
+        .back-btn {
+            background-color: transparent;
+            color: #538d4e;
+            border: 2px solid #538d4e;
+            padding: 12px 25px;
+            font-size: 1.5rem;
+            font-family: 'VT323', monospace;
+            cursor: pointer;
+            margin-top: 30px;
+            transition: all 0.2s ease-in-out;
+            text-transform: uppercase;
+        }
+
+        .back-btn:hover {
+            background-color: #538d4e;
+            color: white;
+            box-shadow: 0 0 10px #538d4e;
+        }
+    </style>
+</head>
+<body>
+    <div class="leaderboard-container">
+        <h2>🏆 Classifica Mondiale</h2>
+        <table id="leaderboard-table">
+            <thead>
+                <tr>
+                    <th>Pos</th>
+                    <th>Giocatore</th>
+                    <th>Punti</th>
+                </tr>
+            </thead>
+            <tbody id="leaderboard-body">
+                <tr><td colspan="3" style="color: #888;">Caricamento in corso...</td></tr>
+            </tbody>
+        </table>
         
-        try {
-            const checkResponse = await fetch(checkUrl, {
-                method: 'GET',
-                headers: {
-                    'apikey': this.SUPABASE_KEY,
-                    'Authorization': `Bearer ${this.SUPABASE_KEY}`
+        <button class="back-btn" onclick="window.location.href='index.html'">↩ Torna al Gioco</button>
+    </div>
+
+    <!-- Il parametro ?v=1.1 forza il caricamento della versione aggiornata ignorando la cache -->
+    <script src="online-leaderboard.js?v=1.1"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            const body = document.getElementById("leaderboard-body");
+            try {
+                const data = await ONLINE_LEADERBOARD.getLeaderboardData();
+
+                if (!data) {
+                    body.innerHTML = `<tr><td colspan='3' style="color: #ff4757;">Nessun dato o errore di rete.</td></tr>`;
+                    return;
                 }
-            });
 
-            if (!checkResponse.ok) return null;
-            const existingRecords = await checkResponse.json();
+                body.innerHTML = ""; 
 
-            // Se questo specifico dispositivo ha già una riga
-            if (existingRecords && existingRecords.length > 0) {
-                const oldRecord = existingRecords[0];
-
-                if (score > oldRecord.score) {
-                    const updateUrl = `${this.SUPABASE_URL}/rest/v1/leaderboard?user_token=eq.${token}`;
-                    const updateResponse = await fetch(updateUrl, {
-                        method: 'PATCH',
-                        headers: {
-                            'apikey': this.SUPABASE_KEY, 'Authorization': `Bearer ${this.SUPABASE_KEY}`,
-                            'Content-Type': 'application/json', 'Prefer': 'return=representation'
-                        },
-                        body: JSON.stringify({ username: username, score: score })
-                    });
-                    return updateResponse.ok ? await updateResponse.json() : null;
-                } else {
-                    if (username !== oldRecord.username) {
-                        const updateUrl = `${this.SUPABASE_URL}/rest/v1/leaderboard?user_token=eq.${token}`;
-                        await fetch(updateUrl, {
-                            method: 'PATCH',
-                            headers: { 'apikey': this.SUPABASE_KEY, 'Authorization': `Bearer ${this.SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ username: username })
-                        });
-                    }
-                    return { message: "Record precedente più alto custodito con successo." };
-                }
-            } 
-            // Se è un nuovo utente, crea la riga
-            else {
-                const insertUrl = `${this.SUPABASE_URL}/rest/v1/leaderboard`;
-                const insertResponse = await fetch(insertUrl, {
-                    method: 'POST',
-                    headers: {
-                        'apikey': this.SUPABASE_KEY, 'Authorization': `Bearer ${this.SUPABASE_KEY}`,
-                        'Content-Type': 'application/json', 'Prefer': 'return=representation'
-                    },
-                    body: JSON.stringify({ username: username, score: score, user_token: token })
+                data.top10.forEach(p => {
+                    const tr = document.createElement("tr");
+                    if (p.isCurrentUser) tr.className = "row-current-user";
+                    tr.innerHTML = `<td>${p.rank}°</td><td>${p.username}</td><td>${p.score}</td>`;
+                    body.appendChild(tr);
                 });
-                return insertResponse.ok ? await insertResponse.json() : null;
+
+                if (data.currentUserRow && data.currentUserRow.rank > 10) {
+                    body.innerHTML += "<tr class='dots-row'><td colspan='3'>...</td></tr>";
+                    const tr = document.createElement("tr");
+                    tr.className = "row-current-user";
+                    tr.innerHTML = `<td>${data.currentUserRow.rank}°</td><td>${data.currentUserRow.username} (Tu)</td><td>${data.currentUserRow.score}</td>`;
+                    body.appendChild(tr);
+                }
+            } catch (err) {
+                body.innerHTML = `<tr><td colspan='3' style="color: #ff4757; font-size: 1rem;">ERRORE: ${err.message}</td></tr>`;
             }
-
-        } catch (error) {
-            console.error("Errore di rete durante l'operazione:", error);
-            return null;
-        }
-    },
-
-    // 3. Calcolo della posizione da mostrare in alto a destra nel gioco
-    calculateRank: async function(myScore) {
-        const url = `${this.SUPABASE_URL}/rest/v1/leaderboard?score=gt.${myScore}&select=count`;
-        try {
-            const response = await fetch(url, {
-                headers: {
-                    'apikey': this.SUPABASE_KEY,
-                    'Authorization': `Bearer ${this.SUPABASE_KEY}`,
-                    'Range-Unit': 'items'
-                }
-            });
-            if (!response.ok) return 1;
-            const data = await response.json();
-            return (data.length > 0 ? data[0].count : 0) + 1;
-        } catch (error) {
-            return 1;
-        }
-    },
-
-    // 4. Scarica tutta la classifica per riempire la nuova pagina leaderboard.html
-    getLeaderboardData: async function() {
-        const myToken = this._getOrCreateUserToken();
-        const url = `${this.SUPABASE_URL}/rest/v1/leaderboard?order=score.desc`;
-        
-        try {
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    'apikey': this.SUPABASE_KEY,
-                    'Authorization': `Bearer ${this.SUPABASE_KEY}`
-                }
-            });
-
-            if (!response.ok) return null;
-            const allRecords = await response.json();
-
-            let top10 = [];
-            let currentUserRow = null;
-
-            allRecords.forEach((record, index) => {
-                const playerRank = index + 1;
-                const isMe = (record.user_token === myToken);
-
-                const playerData = {
-                    rank: playerRank,
-                    username: record.username,
-                    score: record.score,
-                    isCurrentUser: isMe
-                };
-
-                if (playerRank <= 10) {
-                    top10.push(playerData);
-                }
-                if (isMe) {
-                    currentUserRow = playerData;
-                }
-            });
-
-            return {
-                top10: top10,
-                currentUserRow: currentUserRow
-            };
-
-        } catch (error) {
-            console.error("Errore nel caricamento della classifica:", error);
-            return null;
-        }
-    }
-};
+        });
+    </script>
+</body>
+</html>
