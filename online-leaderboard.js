@@ -117,7 +117,7 @@
     </div>
 
     <!-- Il parametro ?v=1.1 forza il caricamento della versione aggiornata ignorando la cache -->
-    <script src="online-leaderboard.js?v=1.1"></script>
+    <script src="online-leaderboard.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", async () => {
             const body = document.getElementById("leaderboard-body");
